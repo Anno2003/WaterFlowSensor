@@ -3,6 +3,8 @@
 #include <WiFi.h>
 #include <WiFiManager.h>
 #include <AsyncMqtt_Generic.h>
+#include <Preferences.h>
+#include <ESPAsyncWebServer.h>
 #include "RemoteDebug.h"
 
 #include <Adafruit_GFX.h>
@@ -26,6 +28,8 @@
 RemoteDebug Debug;
 WiFiManager wm;
 AsyncMqttClient mqttClient;
+AsyncWebServer server(80);
+Preferences prefs;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
@@ -41,11 +45,12 @@ const unsigned long measureInterval = 100;
 /* ===== MQTT ===== */
 bool connectedMQTT = false;
 
-/* ===== WiFiManager parameters ===== */
-char mqtt_host[40]  = DEFAULT_MQTT_HOST;
-char mqtt_port[6]   = DEFAULT_MQTT_PORT;
-char mqtt_topic[64] = DEFAULT_MQTT_TOPIC;
+/* ===== MQTT config ===== */
+char mqtt_host[40];
+char mqtt_port[6];
+char mqtt_topic[64];
 
+/* ===== WiFiManager display ===== */
 char wmFlowText[32];
 char wmTotalText[32];
 
@@ -66,53 +71,101 @@ void IRAM_ATTR flowISR() {
   pulseCount++;
 }
 
-/* ===================== MQTT CALLBACKS ===================== */
-void onMqttConnect(bool sessionPresent) {
-  connectedMQTT = true;
-  Debug.println("MQTT connected");
+/* ===================== STORAGE ===================== */
+void loadConfig() {
+  prefs.begin("flow", true);
 
+  strlcpy(mqtt_host,
+          prefs.getString("host", DEFAULT_MQTT_HOST).c_str(),
+          sizeof(mqtt_host));
+  strlcpy(mqtt_port,
+          prefs.getString("port", DEFAULT_MQTT_PORT).c_str(),
+          sizeof(mqtt_port));
+  strlcpy(mqtt_topic,
+          prefs.getString("topic", DEFAULT_MQTT_TOPIC).c_str(),
+          sizeof(mqtt_topic));
+
+  totalLiters = prefs.getFloat("total", 0.0);
+
+  prefs.end();
+}
+
+void saveConfig() {
+  prefs.begin("flow", false);
+  prefs.putString("host", mqtt_host);
+  prefs.putString("port", mqtt_port);
+  prefs.putString("topic", mqtt_topic);
+  prefs.putFloat("total", totalLiters);
+  prefs.end();
+}
+
+/* ===================== MQTT ===================== */
+void onMqttConnect(bool) {
+  connectedMQTT = true;
   mqttClient.publish(mqtt_topic, 0, true, "FLOW_SENSOR online");
 }
 
-void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
+void onMqttDisconnect(AsyncMqttClientDisconnectReason) {
   connectedMQTT = false;
-  Debug.println("MQTT disconnected");
+}
+
+/* ===================== WEB ===================== */
+void setupWeb() {
+
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *req) {
+    String html =
+      "<html><head>"
+      "<meta http-equiv='refresh' content='1'>"
+      "<style>"
+      "body{background:#111;color:#eee;font-family:monospace;}"
+      "h1{color:#0f0;}"
+      "button{padding:10px;font-size:16px;}"
+      "</style></head><body>"
+      "<h1>FLOW SENSOR</h1>"
+      "<p>Flow: " + String(lastFlowLmin, 2) + " L/min</p>"
+      "<p>Total: " + String(totalLiters, 3) + " L</p>"
+      "<form action='/reset' method='post'>"
+      "<button>Reset Total</button>"
+      "</form>"
+      "</body></html>";
+
+    req->send(200, "text/html", html);
+  });
+
+  server.on("/reset", HTTP_POST, [](AsyncWebServerRequest *req) {
+    totalLiters = 0.0;
+    saveConfig();
+    req->redirect("/");
+  });
+
+  server.on("/api/status", HTTP_GET, [](AsyncWebServerRequest *req) {
+    String json = "{";
+    json += "\"flow\":" + String(lastFlowLmin, 2) + ",";
+    json += "\"total\":" + String(totalLiters, 3);
+    json += "}";
+    req->send(200, "application/json", json);
+  });
+
+  server.begin();
 }
 
 /* ===================== SETUP ===================== */
 void setup() {
   Serial.begin(115200);
+  loadConfig();
 
-  /* OLED */
   Wire.begin(I2C_SDA, I2C_SCL);
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  display.clearDisplay();
-  display.setTextSize(2);
-  display.setCursor(0, 0);
-  display.println("Boot...");
-  display.display();
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3c);
 
-  /* Flow sensor */
   pinMode(FLOW_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(FLOW_PIN), flowISR, FALLING);
 
-  /* WiFiManager UI */
   wm.setConfigPortalBlocking(false);
-  wm.setConfigPortalTimeout(120);
   wm.setShowInfoUpdate(true);
-
-  wm.setCustomHeadElement(
-    "<style>"
-    "body{background:#111;color:#eee;font-family:monospace;}"
-    "h2{color:#0f0;}"
-    "label{color:#0ff;}"
-    "</style>"
-  );
 
   wm.addParameter(&wm_header);
   wm.addParameter(&wm_flow);
   wm.addParameter(&wm_total);
-
   wm.addParameter(&p_mqtt_host);
   wm.addParameter(&p_mqtt_port);
   wm.addParameter(&p_mqtt_topic);
@@ -120,25 +173,22 @@ void setup() {
   WiFi.mode(WIFI_STA);
   wm.autoConnect(DEVICE_NAME);
 
-  /* RemoteDebug */
-  Debug.begin(DEVICE_NAME);
-  Debug.setSerialEnabled(true);
-  Debug.setResetCmdEnabled(true);
-  Debug.showProfiler(true);
-  Debug.showColors(true);
-
-  /* MQTT */
   mqttClient.onConnect(onMqttConnect);
   mqttClient.onDisconnect(onMqttDisconnect);
+  Debug.begin(DEVICE_NAME);          // Initialize the WiFi server
+  Debug.setResetCmdEnabled(true);  // Enable the reset command
+  Debug.showProfiler(true);        // Profiler (Good to measure times, to optimize codes)
+  Debug.showColors(true);          // Colors
+  Debug.setSerialEnabled(true);
+  setupWeb();
+
 }
 
 /* ===================== LOOP ===================== */
 void loop() {
-
-  /* REQUIRED */
+  Debug.handle();
   wm.process();
 
-  /* Flow measurement */
   unsigned long now = millis();
   if (now - lastMeasure >= measureInterval) {
     lastMeasure = now;
@@ -148,54 +198,40 @@ void loop() {
     pulseCount = 0;
     interrupts();
 
-    float freq = pulses * (1000.0 / measureInterval);
-    lastFlowLmin = freq / 7.5;
-
-    /* pulse-based integration (recommended) */
+    lastFlowLmin = (pulses * (1000.0 / measureInterval)) / 7.5;
     totalLiters += pulses / 7.5;
 
-    /* Update WiFiManager text */
-    snprintf(wmFlowText, sizeof(wmFlowText),
-             "%.2f L/min", lastFlowLmin);
+    snprintf(wmFlowText, sizeof(wmFlowText), "%.2f L/min", lastFlowLmin);
+    snprintf(wmTotalText, sizeof(wmTotalText), "%.3f L", totalLiters);
 
-    snprintf(wmTotalText, sizeof(wmTotalText),
-             "%.3f L", totalLiters);
-
-    /* OLED */
     display.clearDisplay();
     display.setTextSize(2);
     display.setCursor(0, 0);
     display.print(lastFlowLmin, 2);
     display.println(" L/m");
-
     display.setTextSize(1);
     display.setCursor(0, 40);
     display.print("Total: ");
     display.print(totalLiters, 2);
-    display.println(" L");
-
     display.display();
 
-    Debug.printf("Flow: %.2f L/min | Total: %.3f L\n",
-                 lastFlowLmin, totalLiters);
+    if(connectedMQTT){
+      char buf [500]="";
+      sprintf(buf,"{\"rate\":%f,\"total\":%f}",lastFlowLmin,totalLiters);
+      Debug.printf("%s | %i\n",buf,pulseCount);
+      mqttClient.publish(mqtt_topic, 0, true, buf);
+    }
   }
 
-  /* MQTT connect when WiFi is ready */
   if (WiFi.status() == WL_CONNECTED && !connectedMQTT) {
     mqttClient.setServer(mqtt_host, atoi(mqtt_port));
     mqttClient.connect();
   }
 
-  /* MQTT publish */
-  if (connectedMQTT) {
-    static unsigned long lastPub = 0;
-    if (millis() - lastPub > 1000) {
-      lastPub = millis();
-      char payload[64];
-      snprintf(payload, sizeof(payload),
-               "{\"flow\":%.2f,\"total\":%.3f}",
-               lastFlowLmin, totalLiters);
-      mqttClient.publish(mqtt_topic, 0, false, payload);
-    }
+  static unsigned long lastSave = 0;
+  if (millis() - lastSave > 5000) {
+    lastSave = millis();
+    saveConfig();   // periodic persistence
   }
+  yield();
 }
