@@ -17,8 +17,10 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
-#define I2C_SDA 10
-#define I2C_SCL 11
+//#define I2C_SDA 10
+//#define I2C_SCL 11
+#define I2C_SDA 8
+#define I2C_SCL 9
 
 #define DEFAULT_MQTT_HOST "broker.emqx.io"
 #define DEFAULT_MQTT_PORT "1883"
@@ -214,10 +216,21 @@ void setupWeb() {
 /* ===================== SETUP ===================== */
 void setup() {
   Serial.begin(115200);
-  loadConfig();
+  
 
   Wire.begin(I2C_SDA, I2C_SCL);
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3c);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3c)) {
+    Debug.println("INIT OLED FAILED!!");
+  }
+
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("Boot...");
+  display.display();
+  loadConfig();
 
   pinMode(FLOW_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(FLOW_PIN), flowISR, FALLING);
@@ -273,12 +286,14 @@ void loop() {
     snprintf(wmTotalText, sizeof(wmTotalText), "%.3f L", totalLiters);
 
     display.clearDisplay();
-    display.setTextSize(2);
+    display.setTextSize(1);
     display.setCursor(0, 0);
+    display.print("IP: ");
+    display.println(WiFi.localIP());
+    display.println();
+    display.print("Rate:");
     display.print(lastFlowLmin, 2);
     display.println(" L/m");
-    display.setTextSize(1);
-    display.setCursor(0, 40);
     display.print("Total: ");
     display.print(totalLiters, 2);
     display.display();
