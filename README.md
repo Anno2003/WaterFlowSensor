@@ -5,7 +5,7 @@
 `git clone git@github.com:Anno2003/WaterFlowSensor.git waterflow_firmware`
 2. buka menggunakan arduino ide lalu flash ke perangkat
 
-> ![NOTE]
+> [!NOTE]
 > firmware ini ditujukan untuk esp32 s3
 > dicompile menggunakan arduino IDE 2.3.6 dengan esp32 core versi 3.3.3 
 
