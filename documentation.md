@@ -60,6 +60,7 @@ Kalibrasi dilakukan dengan mengatur parameter:
 ## Antarmuka Web
 ### Halaman Utama `/`
 ![Halaman utama](./assets/halaman_utama.png)  
+
 Menampilkan:
 - Flow rate (L/min)
 - Total liter
@@ -70,6 +71,7 @@ Halaman ini auto-refresh setiap 1 detik.
 
 ### Halaman Settings `/settings`
 ![Halaman Setting](./assets/halaman_setting.png)  
+
 Digunakan untuk mengatur:
 - MQTT Host
 - MQTT Port
@@ -78,6 +80,7 @@ Konfigurasi disimpan ke flash dan akan otomatis reconnect ke broker.
 
 ### API Endpoint `/api/status`
 ![Api Endpoint](./assets/api_endpoint.png)  
+
 Akah Mengirimkan JSON:
 ``` JSON
 {  
@@ -94,6 +97,7 @@ Endpoint ini bisa digunakan untuk:
 - Sistem monitoring lainnya
 ## MQTT
 ![Penggunaan mqtt menggunakan client](./assets/client_mqtt.png)  
+
 Default:
 - Host: `broker.emqx.io`
 - Port: `1883`
@@ -134,6 +138,7 @@ Penyimpanan dilakukan setiap 5 detik untuk menjaga data tetap aman saat listrik 
 	- http://ip.yang.didapat/ (melalui ip dari yang didapat oleh alat)
 	- http://flow-sensor.local (melalui mDNS)
 ![Akses menggunakan mDNS](./assets/halaman_utama_mdns.png)  
+
 > [!IMPORTANT] 
 > - Pastikan perangkat telah terhubung ke jaringan lokal yang sama
 > - Beberapa perangkat mungkin tidak secara langsung support akses mDNS
