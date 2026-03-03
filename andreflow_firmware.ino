@@ -9,6 +9,8 @@
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <ESPmDNS.h>
+bool mdnsStarted = false;
 
 /* ===================== CONFIG ===================== */
 #define DEVICE_NAME "FLOW_SENSOR"
@@ -216,7 +218,7 @@ void setupWeb() {
 /* ===================== SETUP ===================== */
 void setup() {
   Serial.begin(115200);
-  
+
 
   Wire.begin(I2C_SDA, I2C_SCL);
 
@@ -267,6 +269,13 @@ void setup() {
 void loop() {
   Debug.handle();
   wm.process();
+
+  if (WiFi.status() == WL_CONNECTED && !mdnsStarted) {
+    if (MDNS.begin("flow-sensor")) {
+      MDNS.addService("http", "tcp", 80);
+      mdnsStarted = true;
+    }
+  }
 
   unsigned long now = millis();
   if (now - lastMeasure >= measureInterval) {

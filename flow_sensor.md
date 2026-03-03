@@ -1,0 +1,4 @@
+- [ac to dc](https://www.tokopedia.com/cncstorebandung/hi-link-hlk-pm01-ac-to-dc-isolated-5v-600ma-3-watt?extParam=ivf%3Dfalse%26keyword%3Dhilink+5v+1a%26search_id%3D20251015050053577BCC914F9E5508DXTK%26src%3Dsearch)
+- [mcu]()
+- [display]()
+- [flow sensor](https://www.tokopedia.com/cncstorebandung/yf-s401-water-flow-sensor-flowmeter-0-3-6l-min-pengukur-debit-air?extParam=src%3Dshop%26whid%3D15512&aff_unique_id=&channel=others&chain_key=)
