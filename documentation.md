@@ -59,7 +59,7 @@ Kalibrasi dilakukan dengan mengatur parameter:
 
 ## Antarmuka Web
 ### Halaman Utama `/`
-![[./assets/halaman_utama.png]]
+![./assets/halaman_utama.png]
 Menampilkan:
 - Flow rate (L/min)
 - Total liter
@@ -69,7 +69,7 @@ Menampilkan:
 Halaman ini auto-refresh setiap 1 detik.
 
 ### Halaman Settings `/settings`
-![[./assets/halaman_setting.png]]
+![./assets/halaman_setting.png]
 Digunakan untuk mengatur:
 - MQTT Host
 - MQTT Port
@@ -77,7 +77,7 @@ Digunakan untuk mengatur:
 Konfigurasi disimpan ke flash dan akan otomatis reconnect ke broker.
 
 ### API Endpoint `/api/status`
-![[./assets/api_endpoint.png]]
+![./assets/api_endpoint.png]
 Akah Mengirimkan JSON:
 ``` JSON
 {  
@@ -93,7 +93,7 @@ Endpoint ini bisa digunakan untuk:
 - Home Assistant
 - Sistem monitoring lainnya
 ## MQTT
-![[./assets/client_mqtt.png]]
+![./assets/client_mqtt.png]
 Default:
 - Host: `broker.emqx.io`
 - Port: `1883`

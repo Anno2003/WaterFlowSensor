@@ -16,4 +16,4 @@
 - [RemoteDebug2 4.0.1](https://github.com/karol-brejna-i/RemoteDebug.git)
 - [Adafruit SSD1306 2.5.15](https://github.com/adafruit/Adafruit_SSD1306)
 
-## [Dokumentasi](./Documentation.md)
+## [Dokumentasi](./documentation.md)
