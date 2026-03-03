@@ -59,7 +59,7 @@ Kalibrasi dilakukan dengan mengatur parameter:
 
 ## Antarmuka Web
 ### Halaman Utama `/`
-![[{185878CD-764A-4196-B11D-0FCCD5DE403A}.png|halaman utama]]
+![[./assets/halaman_utama.png]]
 Menampilkan:
 - Flow rate (L/min)
 - Total liter
@@ -69,7 +69,7 @@ Menampilkan:
 Halaman ini auto-refresh setiap 1 detik.
 
 ### Halaman Settings `/settings`
-![[{81FE8B20-2B42-4CEE-937D-50A6F6751CAE}.png|Halaman setting]]
+![[./assets/halaman_setting.png]]
 Digunakan untuk mengatur:
 - MQTT Host
 - MQTT Port
@@ -77,7 +77,7 @@ Digunakan untuk mengatur:
 Konfigurasi disimpan ke flash dan akan otomatis reconnect ke broker.
 
 ### API Endpoint `/api/status`
-![[{8B90C28F-D5DC-4EFF-B373-FCE1888AF4F6}.png|API endpoint]]
+![[./assets/api_endpoint.png]]
 Akah Mengirimkan JSON:
 ``` JSON
 {  
@@ -93,7 +93,7 @@ Endpoint ini bisa digunakan untuk:
 - Home Assistant
 - Sistem monitoring lainnya
 ## MQTT
-![[{65C79A5F-133A-45F8-90EF-B76297B82651}.png|mqtt melalui client mqtt explorer]]
+![[./assets/client_mqtt.png]]
 Default:
 - Host: `broker.emqx.io`
 - Port: `1883`
@@ -133,9 +133,9 @@ Penyimpanan dilakukan setiap 5 detik untuk menjaga data tetap aman saat listrik 
 - Akses melalui browser:
 	- http://ip.yang.didapat/ (melalui ip dari yang didapat oleh alat)
 	- http://flow-sensor.local (melalui mDNS)
-> ![warning] pastikan perangkat telah terhubung ke jaringan lokal yang sama
-
-> ![warning] beberapa perangkat mungkin tidak secara langsung support akses mDNS
+> [!IMPORTANT] 
+> - Pastikan perangkat telah terhubung ke jaringan lokal yang sama
+> - Beberapa perangkat mungkin tidak secara langsung support akses mDNS
 ### Reset Total Liter
 Klik tombol **Reset Total** pada halaman utama antarmuka web.
 ### Kalibrasi Sensor
