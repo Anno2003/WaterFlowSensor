@@ -137,6 +137,7 @@ Penyimpanan dilakukan setiap 5 detik untuk menjaga data tetap aman saat listrik 
 - Akses melalui browser:
 	- http://ip.yang.didapat/ (melalui ip dari yang didapat oleh alat)
 	- http://flow-sensor.local (melalui mDNS)
+	
 ![Akses menggunakan mDNS](./assets/halaman_utama_mdns.png)  
 
 > [!IMPORTANT] 
